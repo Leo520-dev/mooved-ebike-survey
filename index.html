@@ -319,8 +319,6 @@ body {
 var API = window.location.origin + '/api';
 var vehicleCounter = 0;
 
-// ============ Vehicle Card Management ============
-
 function buildVehicleCardHTML(num, data) {
   data = data || {};
   var photoPreview = '';
@@ -425,8 +423,6 @@ function clearPhoto(num) {
   document.getElementById('photoUrl_' + num).value = '';
 }
 
-// ============ Submit ============
-
 function collectVehicleData(containerId) {
   var container = document.getElementById(containerId || 'vehicleCardsContainer');
   var cards = container.querySelectorAll('.vehicle-card');
@@ -501,8 +497,6 @@ function submitForm() {
   });
 }
 
-// ============ Records Page ============
-
 var recordDebounceTimer = null;
 
 function debounceRenderRecords() {
@@ -571,8 +565,6 @@ function renderRecords(data) {
   });
   el.innerHTML = html;
 }
-
-// ============ Admin ============
 
 var adminLoggedIn = false;
 
@@ -697,8 +689,6 @@ function renderAdminRecords(data) {
   el.innerHTML = html;
 }
 
-// ============ Edit Modal ============
-
 function openEditModal(id) {
   fetch(API + '/submissions/' + id)
   .then(function(r) { return r.json(); })
@@ -788,8 +778,6 @@ function saveEdit() {
   });
 }
 
-// ============ Delete ============
-
 var deleteTargetId = null;
 function openDeleteModal(id) {
   deleteTargetId = id;
@@ -804,8 +792,6 @@ document.getElementById('confirmDeleteBtn').onclick = function() {
   .then(function() { toast('\u2705 Deleted successfully'); closeDeleteModal(); loadAdminData(); })
   .catch(function() { toast('\u274C Delete failed', 'error'); });
 };
-
-// ============ Export ============
 
 function exportJSON() {
   var a = document.createElement('a');
@@ -826,8 +812,6 @@ function exportCSV() {
   a.remove();
   toast('\uD83D\uDCE5 CSV exported');
 }
-
-// ============ Helpers ============
 
 function switchPage(name) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -865,15 +849,12 @@ function escAttr(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// ============ Init ============
-
 document.addEventListener('DOMContentLoaded', function() {
   var savedSp = localStorage.getItem('ebike_survey_salesperson');
   if (savedSp) document.getElementById('salesperson').value = savedSp;
   document.getElementById('salesperson').addEventListener('change', function() {
     localStorage.setItem('ebike_survey_salesperson', this.value);
   });
-  // Add first vehicle card by default
   addVehicleCard();
 });
 </script>
