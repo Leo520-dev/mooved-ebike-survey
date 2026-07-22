@@ -1,0 +1,4 @@
+  File "D:\桌面\Hermes", line 1
+    ��i
+    ^
+SyntaxError: Non-UTF-8 code starting with '\xff' in file D:\桌面\Hermes on line 1, but no encoding declared; see https://peps.python.org/pep-0263/ for details

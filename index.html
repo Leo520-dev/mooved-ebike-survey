@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MOOVED Ghana E-Bike Survey</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f0f4f8; --card: rgba(255,255,255,.85); --card-border: rgba(14,165,233,.12);
+  --primary: #0ea5e9; --text: #1e293b; --text2: #64748b; --text3: #94a3b8;
+  --border: #e2e8f0; --input-bg: #ffffff; --input-border: #cbd5e1;
+  --success: #10b981; --danger: #ef4444; --danger-light: #fef2f2;
+  --shadow: 0 2px 12px rgba(15,23,42,.06);
+  --radius: 14px; --radius-sm: 10px;
+}
+html { font-size: 15px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100dvh; padding-bottom: 80px;
+}
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  color: #fff; padding: 16px 16px 14px; text-align: center;
+}
+.header h1 { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
+.header p { font-size: 12px; color: rgba(255,255,255,.65); margin-top: 3px; }
+.header-tabs { display: flex; gap: 8px; margin-top: 12px; justify-content: center; }
+.header-tab {
+  padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid rgba(255,255,255,.25); background: transparent; color: rgba(255,255,255,.8);
+  cursor: pointer; transition: all .2s;
+}
+.header-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.container { max-width: 640px; margin: 0 auto; padding: 14px 14px 20px; }
+.page { display: none; }
+.page.active { display: block; }
+.card {
+  background: var(--card); backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px;
+}
+.card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.form-label .req { color: var(--danger); margin-left: 2px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-sm); font-size: 15px; color: var(--text);
+  background: var(--input-bg); outline: none; transition: border .2s;
+  -webkit-appearance: none; appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
+.form-input::placeholder { color: var(--text3); }
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-textarea { resize: vertical; min-height: 70px; }
+.form-hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.vehicle-card {
+  background: var(--card); backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px;
+  position: relative;
+}
+.vehicle-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.vehicle-card-num {
+  font-size: 14px; font-weight: 700; color: var(--primary);
+  display: flex; align-items: center; gap: 6px;
+}
+.vehicle-card-num .num {
+  background: var(--primary); color: #fff; width: 24px; height: 24px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+}
+.btn-remove-vehicle {
+  background: var(--danger-light); color: var(--danger); border: none;
+  border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-remove-vehicle:hover { background: var(--danger); color: #fff; }
+.photo-upload {
+  border: 2px dashed var(--input-border); border-radius: var(--radius);
+  padding: 20px; text-align: center; cursor: pointer; transition: all .2s;
+  background: var(--input-bg); min-height: 120px; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+}
+.photo-upload:hover { border-color: var(--primary); background: #f0f9ff; }
+.photo-upload.has-photo { padding: 8px; }
+.photo-upload img { max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: contain; }
+.photo-upload .upload-icon { font-size: 32px; }
+.photo-upload .upload-text { font-size: 13px; color: var(--text3); }
+.photo-url-input { display: none; }
+.photo-url-input.show { display: block; }
+.photo-actions { display: flex; gap: 8px; margin-top: 8px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 24px; border: none; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s; width: 100%;
+}
+.btn-primary { background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .5; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-add-vehicle {
+  background: transparent; color: var(--primary); border: 2px dashed var(--primary);
+  border-radius: var(--radius); padding: 14px; font-size: 14px; font-weight: 700;
+  cursor: pointer; width: 100%; margin-bottom: 14px; transition: all .2s;
+}
+.btn-add-vehicle:hover { background: #f0f9ff; }
+.tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.tag-blue { background: #e0f2fe; color: #0369a1; }
+.tag-green { background: #dcfce7; color: #15803d; }
+.tag-orange { background: #fef3c7; color: #b45309; }
+.tag-gray { background: #f1f5f9; color: #64748b; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); text-align: center; }
+.stat-value { font-size: 26px; font-weight: 800; color: var(--primary); line-height: 1.1; }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; font-weight: 600; }
+.brand-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.brand-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
+.brand-table th, .brand-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.brand-table th { font-size: 11px; color: var(--text2); font-weight: 700; text-transform: uppercase; background: #f8fafc; }
+.record-item { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.record-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.record-brand { font-size: 15px; font-weight: 700; }
+.record-price { font-size: 16px; font-weight: 800; color: var(--primary); text-align: right; }
+.record-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.record-actions { display: flex; gap: 6px; margin-top: 10px; }
+.search-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+.search-bar .form-input { flex: 1; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); background: #fff; color: var(--text2); cursor: pointer; transition: all .2s; }
+.chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 12px 18px; border-radius: var(--radius-sm); color: #fff; font-size: 13px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,.15); animation: slideIn .3s ease; max-width: 320px; }
+.toast-success { background: var(--success); }
+.toast-error { background: var(--danger); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: var(--radius); padding: 24px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.modal-box h3 { font-size: 17px; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+.loading { text-align: center; padding: 30px; color: var(--text3); font-size: 13px; }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.password-gate { text-align: center; padding: 60px 20px; }
+.password-gate h2 { font-size: 18px; margin-bottom: 8px; }
+.password-gate p { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+.footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
+.export-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.vehicle-sub-card { padding: 10px; background: #f8fafc; border-radius: 8px; margin-top: 6px; }
+@media (max-width: 480px) {
+  .form-row { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-value { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#x1F6B2; MOOVED E-Bike Market Survey</h1>
+  <p>Ghana Electric Bicycle Market Research Form</p>
+  <div class="header-tabs">
+    <button class="header-tab active" onclick="switchPage('submit')">&#x1F4DD; Submit Form</button>
+    <button class="header-tab" onclick="switchPage('records')">&#x1F4CA; View Data</button>
+    <button class="header-tab" onclick="switchPage('admin')">&#x1F512; Admin Panel</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Page 1: Submit Form -->
+  <div id="pageSubmit" class="page active">
+    <div class="card">
+      <div class="card-title"><span>&#x1F464;</span> Basic Info</div>
+      <div class="form-group">
+        <label class="form-label">Salesperson Name <span class="req">*</span></label>
+        <input type="text" class="form-input" id="salesperson" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Region <span class="req">*</span></label>
+        <select class="form-select" id="region">
+          <option value="">-- Select Region --</option>
+          <option>Greater Accra</option><option>Ashanti</option><option>Western</option>
+          <option>Central</option><option>Eastern</option><option>Volta</option>
+          <option>Northern</option><option>Upper East</option><option>Upper West</option>
+          <option>Bono</option><option>Bono East</option><option>Ahafo</option>
+          <option>Savannah</option><option>North East</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Specific District / City</label>
+        <input type="text" class="form-input" id="district" placeholder="e.g. Tamale, Kumasi, Takoradi">
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-bottom:14px;"><span>&#x1F6B2;</span> Vehicle Models</div>
+
+    <div id="vehicleCardsContainer"></div>
+
+    <button class="btn-add-vehicle" onclick="addVehicleCard()">
+      + Add Another Model
+    </button>
+
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">&#x1F4E4; Submit Survey</button>
+    <div style="height:10px"></div>
+  </div>
+
+  <!-- Page 2: Records -->
+  <div id="pageRecords" class="page">
+    <div class="search-bar">
+      <input type="text" class="form-input" id="recordSearch" placeholder="Search salesperson / notes..." oninput="debounceRenderRecords()">
+    </div>
+    <div id="recordsList"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
+  </div>
+
+  <!-- Page 3: Admin -->
+  <div id="pageAdmin" class="page">
+    <div id="adminLogin" class="password-gate card">
+      <h2>&#x1F512; Admin Login</h2>
+      <p>Please enter the admin password to access the statistics dashboard.</p>
+      <div class="form-group">
+        <input type="password" class="form-input" id="adminPwd" placeholder="Admin Password">
+      </div>
+      <button class="btn btn-primary" onclick="adminLogin()">Login</button>
+    </div>
+    <div id="adminDashboard" style="display:none;">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-value" id="statTotal">--</div><div class="stat-label">Submissions</div></div>
+        <div class="stat-card"><div class="stat-value" id="statVehicles">--</div><div class="stat-label">Total Models</div></div>
+        <div class="stat-card"><div class="stat-value" id="statAvg">--</div><div class="stat-label">Average Price GHS</div></div>
+        <div class="stat-card"><div class="stat-value" id="statMin">--</div><div class="stat-label">Lowest Price</div></div>
+      </div>
+
+      <div class="export-bar">
+        <button class="btn btn-sm btn-success" onclick="exportJSON()" style="width:auto;">&#x1F4E5; Export JSON</button>
+        <button class="btn btn-sm btn-outline" onclick="exportCSV()" style="width:auto;">&#x1F4E5; Export CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="adminLogout()" style="width:auto;">&#x1F6AA; Logout</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>&#x1F4CD;</span> Region Distribution</div>
+        <div class="brand-table-wrap">
+          <table class="brand-table">
+            <thead><tr><th>Region</th><th>Models</th><th>Avg Price GHS</th><th>Min</th><th>Max</th></tr></thead>
+            <tbody id="regionBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>&#x1F465;</span> Salesperson Stats</div>
+        <div class="brand-table-wrap">
+          <table class="brand-table">
+            <thead><tr><th>Salesperson</th><th>Models</th><th>Avg Price GHS</th></tr></thead>
+            <tbody id="spBody"><tr><td colspan="3">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>&#x1F4CB;</span> All Records</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <select class="form-select" id="adminFilterRegion" style="flex:1;min-width:120px;padding:8px;font-size:13px;" onchange="loadAdminData()">
+            <option value="">All Regions</option>
+          </select>
+        </div>
+        <div id="adminRecordsList"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h3>&#x270F;&#xFE0F; Edit Record</h3>
+    <input type="hidden" id="editId">
+    <div class="form-group"><label class="form-label">Salesperson</label><input class="form-input" id="editSalesperson"></div>
+    <div class="form-group"><label class="form-label">Region</label><select class="form-select" id="editRegion"></select></div>
+    <div class="form-group"><label class="form-label">Specific District</label><input class="form-input" id="editDistrict"></div>
+    <div id="editVehiclesContainer"></div>
+    <button class="btn-add-vehicle" onclick="addEditVehicleCard()" style="margin-top:10px;">+ Add Model</button>
+    <div class="modal-actions">
+      <button class="btn btn-sm" style="background:#f1f5f9;color:#64748b;" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-sm btn-primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>&#x26A0;&#xFE0F; Confirm Delete</h3>
+    <p style="color:var(--text2);font-size:14px;">Are you sure you want to delete this submission? All associated vehicle models will be removed.</p>
+    <div class="modal-actions">
+      <button class="btn btn-sm" style="background:#f1f5f9;color:#64748b;" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-sm btn-danger" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+var API = window.location.origin + '/api';
+var vehicleCounter = 0;
+
+// ============ Vehicle Card Management ============
+
+function buildVehicleCardHTML(num, data) {
+  data = data || {};
+  var photoPreview = '';
+  if (data.photo) {
+    photoPreview = '<img src="' + escAttr(data.photo) + '" alt="Vehicle Photo">';
+  }
+  return '<div class="vehicle-card" id="vehicleCard_' + num + '">' +
+    '<div class="vehicle-card-header">' +
+      '<div class="vehicle-card-num"><span class="num">' + num + '</span> Model ' + num + '</div>' +
+      '<button class="btn-remove-vehicle" onclick="removeVehicleCard(' + num + ')">&#x2717; Remove</button>' +
+    '</div>' +
+    '<div class="form-group">' +
+      '<label class="form-label">Vehicle Photo / Image</label>' +
+      '<div class="photo-upload" id="photoUpload_' + num + '" onclick="document.getElementById(\'photoInput_' + num + '\').click()">' +
+        (photoPreview ? photoPreview : '<div class="upload-icon">&#x1F4F7;</div><div class="upload-text">Click to upload photo / Take picture</div>') +
+      '</div>' +
+      '<input type="file" id="photoInput_' + num + '" class="photo-url-input" accept="image/*" onchange="handlePhotoFile(this, ' + num + ')">' +
+      '<div style="margin-top:8px;">' +
+        '<div class="form-hint" style="margin-bottom:4px;">Or enter photo URL:</div>' +
+        '<input type="url" class="form-input" id="photoUrl_' + num + '" placeholder="https://example.com/photo.jpg" value="' + (data.photo || '') + '">' +
+      '</div>' +
+      '<div class="photo-actions">' +
+        '<button class="btn btn-sm btn-outline" onclick="clearPhoto(' + num + ')" type="button">&#x274C; Clear Photo</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="form-group">' +
+      '<label class="form-label">Range (km) <span class="req">*</span></label>' +
+      '<input type="number" class="form-input" id="rangeKm_' + num + '" placeholder="e.g. 60" step="5" min="0" value="' + (data.range_km || '') + '">' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-group">' +
+        '<label class="form-label">Charging Time (hours)</label>' +
+        '<input type="number" class="form-input" id="chargingTime_' + num + '" placeholder="e.g. 6" step="0.5" min="0" value="' + (data.charging_time_h || '') + '">' +
+      '</div>' +
+      '<div class="form-group">' +
+        '<label class="form-label">Weight (kg)</label>' +
+        '<input type="number" class="form-input" id="weightKg_' + num + '" placeholder="e.g. 35" step="1" min="0" value="' + (data.weight_kg || '') + '">' +
+      '</div>' +
+    '</div>' +
+    '<div class="form-group">' +
+      '<label class="form-label">Price (GHS) <span class="req">*</span></label>' +
+      '<input type="number" class="form-input" id="priceGhs_' + num + '" placeholder="e.g. 4200" step="50" min="0" value="' + (data.price_ghs || '') + '">' +
+    '</div>' +
+    '<div class="form-group">' +
+      '<label class="form-label">Notes</label>' +
+      '<textarea class="form-textarea" id="notes_' + num + '" placeholder="Brand, model, dealer, etc.">' + esc(unescape(data.notes || '')) + '</textarea>' +
+    '</div>' +
+  '</div>';
+}
+
+function addVehicleCard(data) {
+  vehicleCounter++;
+  var num = vehicleCounter;
+  var container = document.getElementById('vehicleCardsContainer');
+  var card = document.createElement('div');
+  card.innerHTML = buildVehicleCardHTML(num, data);
+  container.appendChild(card.firstElementChild);
+  updateVehicleNumbers();
+}
+
+function removeVehicleCard(num) {
+  var card = document.getElementById('vehicleCard_' + num);
+  if (card) {
+    card.remove();
+    updateVehicleNumbers();
+  }
+}
+
+function updateVehicleNumbers() {
+  var cards = document.querySelectorAll('#vehicleCardsContainer .vehicle-card');
+  cards.forEach(function(card, i) {
+    var num = i + 1;
+    var header = card.querySelector('.vehicle-card-num');
+    if (header) {
+      header.innerHTML = '<span class="num">' + num + '</span> Model ' + num;
+    }
+  });
+}
+
+function handlePhotoFile(input, num) {
+  if (input.files && input.files[0]) {
+    var file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Image too large (>5MB)', 'error');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var upload = document.getElementById('photoUpload_' + num);
+      upload.classList.add('has-photo');
+      upload.innerHTML = '<img src="' + e.target.result + '" alt="Vehicle Photo"><div class="upload-text" style="font-size:11px;">Click to replace photo</div>';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function clearPhoto(num) {
+  var upload = document.getElementById('photoUpload_' + num);
+  upload.classList.remove('has-photo');
+  upload.innerHTML = '<div class="upload-icon">&#x1F4F7;</div><div class="upload-text">Click to upload photo / Take picture</div>';
+  document.getElementById('photoInput_' + num).value = '';
+  document.getElementById('photoUrl_' + num).value = '';
+}
+
+// ============ Submit ============
+
+function collectVehicleData(containerId) {
+  var container = document.getElementById(containerId || 'vehicleCardsContainer');
+  var cards = container.querySelectorAll('.vehicle-card');
+  var vehicles = [];
+  cards.forEach(function(card) {
+    var id = card.id.replace('vehicleCard_', '');
+    var range = parseFloat(document.getElementById('rangeKm_' + id).value);
+    var price = parseFloat(document.getElementById('priceGhs_' + id).value);
+    vehicles.push({
+      photo: document.getElementById('photoUrl_' + id).value.trim(),
+      range_km: isNaN(range) ? null : range,
+      charging_time_h: parseFloat(document.getElementById('chargingTime_' + id).value) || null,
+      weight_kg: parseFloat(document.getElementById('weightKg_' + id).value) || null,
+      price_ghs: isNaN(price) ? null : price,
+      notes: document.getElementById('notes_' + id).value.trim()
+    });
+  });
+  return vehicles;
+}
+
+function submitForm() {
+  var salesperson = document.getElementById('salesperson').value.trim();
+  var region = document.getElementById('region').value;
+  var district = document.getElementById('district').value.trim();
+  var vehicles = collectVehicleData();
+
+  if (!salesperson) return toast('Please enter your name', 'error');
+  if (!region) return toast('Please select a region', 'error');
+  if (vehicles.length === 0) return toast('Please add at least one vehicle model', 'error');
+
+  for (var i = 0; i < vehicles.length; i++) {
+    if (!vehicles[i].price_ghs && !vehicles[i].range_km) {
+      return toast('Model ' + (i+1) + ': Please enter Range or Price', 'error');
+    }
+  }
+
+  var data = {
+    salesperson: salesperson,
+    region: region,
+    district: district,
+    vehicles: vehicles
+  };
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '\u23F3 Submitting...';
+
+  fetch(API + '/submissions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.ok) {
+      toast('\u2705 Submitted successfully! ' + vehicles.length + ' model(s) recorded.');
+      var sp = data.salesperson;
+      document.getElementById('region').value = '';
+      document.getElementById('district').value = '';
+      document.getElementById('vehicleCardsContainer').innerHTML = '';
+      vehicleCounter = 0;
+      addVehicleCard();
+      document.getElementById('salesperson').value = sp;
+    } else {
+      toast('\u274C ' + (d.error || 'Submission failed'), 'error');
+    }
+  })
+  .catch(function(e) { toast('\u274C Network error: ' + e.message, 'error'); })
+  .finally(function() {
+    btn.disabled = false;
+    btn.textContent = '\uD83D\uDCE4 Submit Survey';
+  });
+}
+
+// ============ Records Page ============
+
+var recordDebounceTimer = null;
+
+function debounceRenderRecords() {
+  clearTimeout(recordDebounceTimer);
+  recordDebounceTimer = setTimeout(loadRecords, 300);
+}
+
+function loadRecords() {
+  var search = document.getElementById('recordSearch').value.trim();
+  var params = [];
+  if (search) params.push('search=' + encodeURIComponent(search));
+  fetch(API + '/submissions?' + params.join('&'))
+  .then(function(r) { return r.json(); })
+  .then(function(d) { renderRecords(d.data); })
+  .catch(function() {
+    document.getElementById('recordsList').innerHTML = '<div class="empty-state"><div class="icon">\u26A0\uFE0F</div><p>Failed to load data. Please check your network connection.</p></div>';
+  });
+}
+
+function renderRecords(data) {
+  var el = document.getElementById('recordsList');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">\uD83D\uD8AD</div><p>No submissions yet.<br>Waiting for responses from field sales teams.</p></div>';
+    return;
+  }
+  var html = '';
+  data.forEach(function(item) {
+    var vehicles = item.vehicles || [];
+    var vehicleCount = vehicles.length;
+    html += '<div class="record-item">' +
+      '<div class="record-head">' +
+        '<div><div class="record-brand">' + esc(item.salesperson) + '</div>' +
+        '<div class="record-model" style="color:var(--text2);font-size:13px;">\uD83D\uDCCC ' + esc(item.region) + (item.district ? ' \u00B7 ' + esc(item.district) : '') + '</div></div>' +
+        '<div><div class="record-price">\uD83D\uDEB2 ' + vehicleCount + ' model(s)</div>' +
+        '<div style="font-size:11px;color:var(--text3);text-align:right;">\uD83D\uDD50 ' + formatDate(item.submitted_at) + '</div></div>' +
+      '</div>';
+
+    if (vehicles.length > 0) {
+      html += '<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">';
+      vehicles.forEach(function(v, idx) {
+        var photoHtml = '';
+        if (v.photo) {
+          if (v.photo.startsWith('data:') || v.photo.startsWith('http')) {
+            photoHtml = '<img src="' + escAttr(v.photo) + '" style="width:100%;max-height:150px;object-fit:contain;border-radius:8px;margin-bottom:6px;background:#f8fafc;">';
+          } else {
+            photoHtml = '<div style="width:100%;max-height:150px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:8px;margin-bottom:6px;"><span style="font-size:24px;">\uD83D\uDCF7</span></div>';
+          }
+        }
+        html += '<div class="vehicle-sub-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<span style="font-size:13px;font-weight:700;">\uD83D\uDEB2 Model ' + (idx+1) + '</span>' +
+            (v.price_ghs ? '<span style="font-size:14px;font-weight:800;color:var(--primary);">\u20A5' + Number(v.price_ghs).toLocaleString() + '</span>' : '') +
+          '</div>' +
+          photoHtml +
+          '<div class="record-meta" style="margin-top:4px;">' +
+            (v.range_km ? '<span class="tag tag-green">\uD83D\uDCCD ' + v.range_km + ' km</span>' : '') +
+            (v.charging_time_h ? '<span class="tag tag-blue">\u23F1 ' + v.charging_time_h + ' h</span>' : '') +
+            (v.weight_kg ? '<span class="tag tag-orange">\u2696\uFE0F ' + v.weight_kg + ' kg</span>' : '') +
+          '</div>' +
+          (v.notes ? '<div style="margin-top:4px;font-size:12px;color:var(--text2);">' + esc(v.notes) + '</div>' : '') +
+        '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ============ Admin ============
+
+var adminLoggedIn = false;
+
+function adminLogin() {
+  var pwd = document.getElementById('adminPwd').value;
+  fetch(API + '/settings')
+  .then(function(r) { return r.json(); })
+  .then(function(s) {
+    if (pwd === s.admin_password) {
+      adminLoggedIn = true;
+      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminDashboard').style.display = 'block';
+      loadAdminData();
+      toast('\u2705 Login successful');
+    } else {
+      toast('\u274C Incorrect password', 'error');
+    }
+  });
+}
+
+function adminLogout() {
+  adminLoggedIn = false;
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminDashboard').style.display = 'none';
+  document.getElementById('adminPwd').value = '';
+}
+
+function loadAdminData() {
+  fetch(API + '/stats/summary')
+  .then(function(r) { return r.json(); })
+  .then(function(s) {
+    document.getElementById('statTotal').textContent = s.total || 0;
+    document.getElementById('statVehicles').textContent = s.total_vehicles || 0;
+    document.getElementById('statAvg').textContent = s.avg_price_ghs ? '\u20A5' + Math.round(s.avg_price_ghs) : '--';
+    document.getElementById('statMin').textContent = s.min_price_ghs ? '\u20A5' + Math.round(s.min_price_ghs) : '--';
+
+    var regionHtml = '';
+    (s.by_region || []).forEach(function(r) {
+      regionHtml += '<tr><td><strong>' + esc(r.region) + '</strong></td><td>' + r.cnt + '</td>' +
+        '<td>\u20A5' + r.avg_ghs + '</td><td>\u20A5' + r.min_ghs + '</td><td>\u20A5' + r.max_ghs + '</td></tr>';
+    });
+    document.getElementById('regionBody').innerHTML = regionHtml || '<tr><td colspan="5">No data</td></tr>';
+
+    var spHtml = '';
+    (s.by_salesperson || []).forEach(function(sp) {
+      spHtml += '<tr><td>' + esc(sp.salesperson) + '</td><td>' + sp.cnt + ' models</td><td>\u20A5' + sp.avg_ghs + '</td></tr>';
+    });
+    document.getElementById('spBody').innerHTML = spHtml || '<tr><td colspan="3">No data</td></tr>';
+
+    var regionSel = document.getElementById('adminFilterRegion');
+    var regionVal = regionSel.value;
+    regionSel.innerHTML = '<option value="">All Regions</option>';
+    (s.regions || []).forEach(function(r) {
+      regionSel.innerHTML += '<option value="' + r.region + '">' + r.region + '</option>';
+    });
+    regionSel.value = regionVal;
+
+    loadAdminRecords();
+  });
+}
+
+function loadAdminRecords() {
+  var region = document.getElementById('adminFilterRegion').value;
+  var params = [];
+  if (region) params.push('region=' + encodeURIComponent(region));
+  fetch(API + '/submissions?' + params.join('&'))
+  .then(function(r) { return r.json(); })
+  .then(function(d) { renderAdminRecords(d.data); });
+}
+
+function renderAdminRecords(data) {
+  var el = document.getElementById('adminRecordsList');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">\uD83D\uD8AD</div><p>No records found.</p></div>';
+    return;
+  }
+  var html = '';
+  data.forEach(function(item) {
+    var vehicles = item.vehicles || [];
+    var vehicleCount = vehicles.length;
+    html += '<div class="record-item">' +
+      '<div class="record-head">' +
+        '<div><div class="record-brand">' + esc(item.salesperson) + '</div>' +
+        '<div class="record-model" style="color:var(--text2);font-size:13px;">\uD83D\uDCCC ' + esc(item.region) + (item.district ? ' \u00B7 ' + esc(item.district) : '') + '</div></div>' +
+        '<div class="record-price">\uD83D\uDEB2 ' + vehicleCount + ' models</div>' +
+      '</div>';
+
+    if (vehicles.length > 0) {
+      html += '<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">';
+      vehicles.forEach(function(v, idx) {
+        var photoHtml = '';
+        if (v.photo) {
+          if (v.photo.startsWith('data:') || v.photo.startsWith('http')) {
+            photoHtml = '<img src="' + escAttr(v.photo) + '" style="width:50px;height:50px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="window.open(\'' + escAttr(v.photo) + '\')">';
+          } else {
+            photoHtml = '<div style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:6px;">\uD83D\uDCF7</div>';
+          }
+        }
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#f8fafc;border-radius:6px;">' +
+          photoHtml +
+          '<div style="flex:1;">' +
+            '<div style="font-size:12px;font-weight:700;">\uD83D\uDEB2 Model ' + (idx+1) + '</div>' +
+            '<div class="record-meta" style="margin-top:2px;">' +
+              (v.range_km ? '<span class="tag tag-green">\uD83D\uDCCD ' + v.range_km + ' km</span>' : '') +
+              (v.charging_time_h ? '<span class="tag tag-blue">\u23F1 ' + v.charging_time_h + ' h</span>' : '') +
+              (v.weight_kg ? '<span class="tag tag-orange">\u2696\uFE0F ' + v.weight_kg + ' kg</span>' : '') +
+            '</div>' +
+          '</div>' +
+          (v.price_ghs ? '<div style="font-size:13px;font-weight:800;color:var(--primary);">\u20A5' + Number(v.price_ghs).toLocaleString() + '</div>' : '') +
+          (v.notes ? '<div style="font-size:11px;color:var(--text3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(v.notes) + '</div>' : '') +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div class="record-actions">' +
+      '<button class="btn btn-sm btn-outline" onclick="openEditModal(' + item.id + ')">\u270F\uFE0F Edit</button>' +
+      '<button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="openDeleteModal(' + item.id + ')">\uD83D\uDDD1\uFE0F Delete</button>' +
+    '</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ============ Edit Modal ============
+
+function openEditModal(id) {
+  fetch(API + '/submissions/' + id)
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    document.getElementById('editId').value = d.id;
+    document.getElementById('editSalesperson').value = d.salesperson;
+    document.getElementById('editDistrict').value = d.district || '';
+
+    var regionSel = document.getElementById('editRegion');
+    regionSel.innerHTML = '';
+    var regions = ['Greater Accra','Ashanti','Western','Central','Eastern','Volta','Northern','Upper East','Upper West','Bono','Bono East','Ahafo','Savannah','North East'];
+    regions.forEach(function(r) {
+      regionSel.innerHTML += '<option value="' + r + '"' + (r === d.region ? ' selected' : '') + '>' + r + '</option>';
+    });
+
+    var container = document.getElementById('editVehiclesContainer');
+    container.innerHTML = '';
+    var vehicles = d.vehicles || [];
+    vehicles.forEach(function(v) {
+      addEditVehicleCard(v);
+    });
+
+    document.getElementById('editModal').classList.add('show');
+  });
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+}
+
+function addEditVehicleCard(data) {
+  vehicleCounter++;
+  var num = vehicleCounter;
+  var container = document.getElementById('editVehiclesContainer');
+  var card = document.createElement('div');
+  card.className = 'vehicle-card';
+  card.id = 'editVehicleCard_' + num;
+  card.innerHTML = buildVehicleCardHTML(num, data);
+  var removeBtn = card.querySelector('.btn-remove-vehicle');
+  if (removeBtn) {
+    removeBtn.setAttribute('onclick', 'removeEditVehicleCard(' + num + ')');
+  }
+  container.appendChild(card);
+}
+
+function removeEditVehicleCard(num) {
+  var card = document.getElementById('editVehicleCard_' + num);
+  if (card) card.remove();
+}
+
+function collectEditVehicleData() {
+  var container = document.getElementById('editVehiclesContainer');
+  var cards = container.querySelectorAll('.vehicle-card');
+  var vehicles = [];
+  cards.forEach(function(card) {
+    var id = card.id.replace('editVehicleCard_', '');
+    var range = parseFloat(document.getElementById('rangeKm_' + id).value);
+    var price = parseFloat(document.getElementById('priceGhs_' + id).value);
+    vehicles.push({
+      photo: document.getElementById('photoUrl_' + id).value.trim(),
+      range_km: isNaN(range) ? null : range,
+      charging_time_h: parseFloat(document.getElementById('chargingTime_' + id).value) || null,
+      weight_kg: parseFloat(document.getElementById('weightKg_' + id).value) || null,
+      price_ghs: isNaN(price) ? null : price,
+      notes: document.getElementById('notes_' + id).value.trim()
+    });
+  });
+  return vehicles;
+}
+
+function saveEdit() {
+  var id = document.getElementById('editId').value;
+  var data = {
+    salesperson: document.getElementById('editSalesperson').value,
+    region: document.getElementById('editRegion').value,
+    district: document.getElementById('editDistrict').value,
+    vehicles: collectEditVehicleData()
+  };
+  fetch(API + '/submissions/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.ok) { toast('\u2705 Updated successfully'); closeEditModal(); loadAdminData(); }
+    else toast('\u274C Update failed', 'error');
+  });
+}
+
+// ============ Delete ============
+
+var deleteTargetId = null;
+function openDeleteModal(id) {
+  deleteTargetId = id;
+  document.getElementById('deleteModal').classList.add('show');
+}
+function closeDeleteModal() {
+  deleteTargetId = null;
+  document.getElementById('deleteModal').classList.remove('show');
+}
+document.getElementById('confirmDeleteBtn').onclick = function() {
+  fetch(API + '/submissions/' + deleteTargetId, { method: 'DELETE' })
+  .then(function() { toast('\u2705 Deleted successfully'); closeDeleteModal(); loadAdminData(); })
+  .catch(function() { toast('\u274C Delete failed', 'error'); });
+};
+
+// ============ Export ============
+
+function exportJSON() {
+  var a = document.createElement('a');
+  a.href = API + '/export/json';
+  a.download = 'MOOVED_EBike_Survey_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('\uD83D\uDCE5 JSON exported (with Schema)');
+}
+
+function exportCSV() {
+  var a = document.createElement('a');
+  a.href = API + '/export/csv';
+  a.download = 'MOOVED_EBike_Survey_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('\uD83D\uDCE5 CSV exported');
+}
+
+// ============ Helpers ============
+
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.header-tab').forEach(function(t) { t.classList.remove('active'); });
+  var map = { submit: 'pageSubmit', records: 'pageRecords', admin: 'pageAdmin' };
+  document.getElementById(map[name]).classList.add('active');
+  var tabs = document.querySelectorAll('.header-tab');
+  if (name === 'submit') tabs[0].classList.add('active');
+  else if (name === 'records') { tabs[1].classList.add('active'); loadRecords(); }
+  else { tabs[2].classList.add('active'); }
+}
+
+function toast(msg, type) {
+  type = type || 'success';
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(function() { el.style.opacity = '0'; setTimeout(function(){ el.remove(); }, 300); }, 3000);
+}
+
+function formatDate(iso) {
+  if (!iso) return '--';
+  var d = new Date(iso);
+  return d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ============ Init ============
+
+document.addEventListener('DOMContentLoaded', function() {
+  var savedSp = localStorage.getItem('ebike_survey_salesperson');
+  if (savedSp) document.getElementById('salesperson').value = savedSp;
+  document.getElementById('salesperson').addEventListener('change', function() {
+    localStorage.setItem('ebike_survey_salesperson', this.value);
+  });
+  // Add first vehicle card by default
+  addVehicleCard();
+});
+</script>
+
+<div class="footer">
+  MOOVED Solar · Ghana E-Bike Market Survey · Powered by Hermes Agent
+</div>
+
+</body>
+</html>
