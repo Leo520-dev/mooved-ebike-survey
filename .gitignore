@@ -1,20 +1,7 @@
-# Python
+node_modules/
+.env
 *.pyc
 __pycache__/
-*.pyo
-*.pyd
-.Python
-venv/
-env/
-ENV/
-
-# Survey database (contains sensitive data)
-survey.db
-
-# Server logs
-server.log
-server.err
-
-# OS files
 .DS_Store
 Thumbs.db
+data/survey-data.json

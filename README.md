@@ -1,57 +1,57 @@
-# MOOVED E-Bike Market Survey - Ghana
+# MOOVED Ghana E-Bike Market Survey
 
-## 🔗 Live Survey Link
+A multi-model electric vehicle market research survey for Ghana, deployed on GitHub Pages with data stored in GitHub.
 
-**https://leo520-dev.github.io/mooved-ebike-survey/**
+## 🌐 Live Demo
 
----
+**Survey URL**: https://leo520-dev.github.io/mooved-ebike-survey/
 
-## 📝 How to Use
+## 📋 Features
 
-### For Sales Team (Ghana):
-1. Open the link above on your **mobile phone browser** (Chrome/Safari)
-2. Fill in your name and select your region
-3. Add e-bike models with photos, specs (range, charging time, weight), and prices
-4. You can add **multiple models** per submission using "+ Add Another Model"
-5. Click "Submit Survey" — data is saved immediately
+- Multi-model vehicle survey (add multiple models per submission)
+- Region and district tracking
+- Admin dashboard with statistics
+- Export data as JSON or CSV
+- Mobile-friendly design
+- Dark theme UI
 
-### For Admin (You):
-1. Go to the same link
-2. Click **"Admin Panel"** tab
-3. Enter password: `mooved2026`
-4. View statistics, export data (JSON/CSV), edit or delete submissions
+## 🚀 Deployment
 
----
+This project uses GitHub Pages for hosting:
 
-## 📊 What Data Is Collected
+1. Go to repository Settings > Pages
+2. Set Source to "Deploy from a branch"
+3. Select `main` branch and `/ (root)` folder
+4. Click Save
 
-| Field | Description |
-|-------|-------------|
-| Salesperson | Name of the person submitting |
-| Region | Ghana region (Greater Accra, Ashanti, Western, etc.) |
-| District/City | Specific city or district |
-| Vehicle Photo | Image of the e-bike |
-| Range (km) | Battery range in kilometers |
-| Charging Time (hours) | Full charge time |
-| Weight (kg) | Total bike weight |
-| Price (GHS) | Selling price in Ghana Cedis |
-| Notes | Brand, model, dealer info, etc. |
+The site will be available at `https://<username>.github.io/<repo-name>/`
 
----
+## 📊 Data Storage
 
-## 🚀 Quick Start
+Data is stored in `data/survey-data.json` file within the repository. Each submission includes:
+- Salesperson name
+- Region (Ghana regions)
+- District/City
+- Multiple vehicle models with specifications
 
-```bash
-# Clone the repo
-git clone https://github.com/Leo520-dev/mooved-ebike-survey.git
+## 🔐 Admin Access
 
-# Run locally (requires Python 3.8+)
-cd mooved-ebike-survey
-python server.py
+Admin Panel password: `mooved2026`
 
-# Open http://localhost:5000
+## 📁 Project Structure
+
+```
+├── index.html          # Main survey application
+├── data/               # Data storage directory
+│   └── survey-data.json  # Survey submissions (auto-generated)
+├── README.md           # This file
+└── .gitignore          # Git ignore rules
 ```
 
----
+## 🛠️ Development
 
-*Powered by Hermes Agent · MOOVED Solar*
+No build process required - it's a single HTML file with embedded CSS and JavaScript.
+
+## 📝 License
+
+MIT License
