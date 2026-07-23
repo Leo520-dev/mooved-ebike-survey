@@ -316,7 +316,8 @@ body {
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-var API = 'http://localhost:5000/api';
+// Google Apps Script Web App URL (部署后替换)
+var API = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
 var vehicleCounter = 0;
 
 function buildVehicleCardHTML(num, data) {
@@ -470,10 +471,14 @@ function submitForm() {
   btn.disabled = true;
   btn.textContent = '\u23F3 Submitting...';
 
-  fetch(API + '/submissions', {
+  // For Google Apps Script, we need to use a different approach
+  var formData = new FormData();
+  formData.append('action', 'submit');
+  formData.append('data', JSON.stringify(data));
+
+  fetch(API, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    body: formData
   })
   .then(function(r) { return r.json(); })
   .then(function(d) {
@@ -506,9 +511,14 @@ function debounceRenderRecords() {
 
 function loadRecords() {
   var search = document.getElementById('recordSearch').value.trim();
-  var params = [];
-  if (search) params.push('search=' + encodeURIComponent(search));
-  fetch(API + '/submissions?' + params.join('&'))
+  
+  // For Google Apps Script, use GET with query parameters
+  var url = API + '?action=submissions';
+  if (search) {
+    url += '&search=' + encodeURIComponent(search);
+  }
+  
+  fetch(url)
   .then(function(r) { return r.json(); })
   .then(function(d) { renderRecords(d.data); })
   .catch(function() {
@@ -570,7 +580,9 @@ var adminLoggedIn = false;
 
 function adminLogin() {
   var pwd = document.getElementById('adminPwd').value;
-  fetch(API + '/settings')
+  
+  // For Google Apps Script, use GET request
+  fetch(API + '?action=settings')
   .then(function(r) { return r.json(); })
   .then(function(s) {
     if (pwd === s.admin_password) {
@@ -593,7 +605,8 @@ function adminLogout() {
 }
 
 function loadAdminData() {
-  fetch(API + '/stats/summary')
+  // For Google Apps Script, use GET request
+  fetch(API + '?action=stats')
   .then(function(r) { return r.json(); })
   .then(function(s) {
     document.getElementById('statTotal').textContent = s.total || 0;
@@ -628,9 +641,14 @@ function loadAdminData() {
 
 function loadAdminRecords() {
   var region = document.getElementById('adminFilterRegion').value;
-  var params = [];
-  if (region) params.push('region=' + encodeURIComponent(region));
-  fetch(API + '/submissions?' + params.join('&'))
+  
+  // For Google Apps Script, use GET request with query parameters
+  var url = API + '?action=submissions';
+  if (region) {
+    url += '&region=' + encodeURIComponent(region);
+  }
+  
+  fetch(url)
   .then(function(r) { return r.json(); })
   .then(function(d) { renderAdminRecords(d.data); });
 }
@@ -690,7 +708,8 @@ function renderAdminRecords(data) {
 }
 
 function openEditModal(id) {
-  fetch(API + '/submissions/' + id)
+  // For Google Apps Script, use GET request
+  fetch(API + '?action=submission&id=' + id)
   .then(function(r) { return r.json(); })
   .then(function(d) {
     document.getElementById('editId').value = d.id;
@@ -762,15 +781,22 @@ function collectEditVehicleData() {
 function saveEdit() {
   var id = document.getElementById('editId').value;
   var data = {
+    action: 'update',
+    id: id,
     salesperson: document.getElementById('editSalesperson').value,
     region: document.getElementById('editRegion').value,
     district: document.getElementById('editDistrict').value,
     vehicles: collectEditVehicleData()
   };
-  fetch(API + '/submissions/' + id, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+  
+  // For Google Apps Script, use POST with FormData
+  var formData = new FormData();
+  formData.append('action', 'update');
+  formData.append('data', JSON.stringify(data));
+  
+  fetch(API, {
+    method: 'POST',
+    body: formData
   }).then(function(r) { return r.json(); })
   .then(function(d) {
     if (d.ok) { toast('\u2705 Updated successfully'); closeEditModal(); loadAdminData(); }
@@ -788,14 +814,28 @@ function closeDeleteModal() {
   document.getElementById('deleteModal').classList.remove('show');
 }
 document.getElementById('confirmDeleteBtn').onclick = function() {
-  fetch(API + '/submissions/' + deleteTargetId, { method: 'DELETE' })
+  var data = {
+    action: 'delete',
+    id: deleteTargetId
+  };
+  
+  // For Google Apps Script, use POST with FormData
+  var formData = new FormData();
+  formData.append('action', 'delete');
+  formData.append('data', JSON.stringify(data));
+  
+  fetch(API, {
+    method: 'POST',
+    body: formData
+  })
   .then(function() { toast('\u2705 Deleted successfully'); closeDeleteModal(); loadAdminData(); })
   .catch(function() { toast('\u274C Delete failed', 'error'); });
 };
 
 function exportJSON() {
+  // For Google Apps Script, use GET request
   var a = document.createElement('a');
-  a.href = API + '/export/json';
+  a.href = API + '?action=export_json';
   a.download = 'MOOVED_EBike_Survey_' + new Date().toISOString().slice(0,10) + '.json';
   document.body.appendChild(a);
   a.click();
@@ -804,8 +844,9 @@ function exportJSON() {
 }
 
 function exportCSV() {
+  // For Google Apps Script, use GET request
   var a = document.createElement('a');
-  a.href = API + '/export/csv';
+  a.href = API + '?action=export_csv';
   a.download = 'MOOVED_EBike_Survey_' + new Date().toISOString().slice(0,10) + '.csv';
   document.body.appendChild(a);
   a.click();
