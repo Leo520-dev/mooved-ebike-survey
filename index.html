@@ -103,6 +103,7 @@ tr:hover{background:rgba(232,162,120,.05)}
 <div id="adminTab" class="tc">
 <div id="adminLogin" class="card">
 <h2>Admin Panel</h2>
+<p style="color:var(--muted);margin-bottom:16px">View submissions via GitHub Issues:<br><a href="https://github.com/Leo520-dev/mooved-ebike-survey/issues" target="_blank" style="color:var(--accent)">github.com/Leo520-dev/mooved-ebike-survey/issues</a></p>
 <div class="form-group">
 <label>Password</label>
 <input type="password" id="adminPwd" placeholder="Enter admin password">
@@ -141,8 +142,6 @@ tr:hover{background:rgba(232,162,120,.05)}
 <option value="">All Regions</option>
 </select>
 <input type="text" id="recordSearch" placeholder="Search..." oninput="debounceRenderRecords()" style="flex:1;min-width:200px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)">
-<button class="btn bsm bs" onclick="exportJSON()">📥 Export JSON</button>
-<button class="btn bsm bs" onclick="exportCSV()">📥 Export CSV</button>
 </div>
 <div id="recordsList"></div>
 </div>
@@ -177,18 +176,18 @@ tr:hover{background:rgba(232,162,120,.05)}
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-var API_BASE = 'https://api.github.com';
+// ==================== CONFIG ====================
+var GITHUB_TOKEN = ''; // TODO: Replace with your GitHub Personal Access Token
 var REPO_OWNER = 'Leo520-dev';
 var REPO_NAME = 'mooved-ebike-survey';
-var BRANCH = 'main';
-var DATA_FILE = 'data/survey-data.json';
+var LABEL_PREFIX = 'survey:';
 var ADMIN_PASSWORD = 'mooved2026';
 var vehicleCounter = 0;
 var adminLoggedIn = false;
 var deleteTargetId = null;
 var recordDebounceTimer = null;
 
-// ========== TOAST ==========
+// ==================== TOAST ====================
 function toast(msg, type) {
   var t = document.createElement('div');
   t.className = 'toast ' + (type || 'success');
@@ -197,7 +196,7 @@ function toast(msg, type) {
   setTimeout(function() { t.remove(); }, 3000);
 }
 
-// ========== TABS ==========
+// ==================== TABS ====================
 function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   document.querySelectorAll('.tc').forEach(function(t) { t.classList.remove('active'); });
@@ -210,14 +209,14 @@ function showTab(tab) {
   }
 }
 
-// ========== ESCAPE HTML ==========
+// ==================== ESCAPE HTML ====================
 function esc(s) {
   var d = document.createElement('div');
   d.textContent = s || '';
   return d.innerHTML;
 }
 
-// ========== VEHICLE CARDS ==========
+// ==================== VEHICLE CARDS ====================
 function buildVehicleCardHTML(num, data) {
   data = data || {};
   return '<div class="vc" id="vehicleCard' + num + '">' +
@@ -285,20 +284,22 @@ function collectEditVehicleData() {
   return vehicles;
 }
 
-// ========== GITHUB API HELPERS ==========
-async function fetchFromGitHub(url, options) {
+// ==================== GITHUB API HELPERS ====================
+async function githubRequest(url, options) {
   options = options || {};
   options.headers = options.headers || {};
   options.headers['Accept'] = 'application/vnd.github.v3+json';
   options.headers['User-Agent'] = 'MOOVED-Survey-App';
+  if (GITHUB_TOKEN) {
+    options.headers['Authorization'] = 'Bearer ' + GITHUB_TOKEN;
+  }
   
-  // For POST/PUT/PATCH, set Content-Type
   if (options.body && typeof options.body === 'string') {
     options.headers['Content-Type'] = 'application/json';
   }
   
   try {
-    var response = await fetch(API_BASE + url, options);
+    var response = await fetch(url, options);
     if (!response.ok) {
       throw new Error('HTTP ' + response.status + ': ' + response.statusText);
     }
@@ -309,34 +310,7 @@ async function fetchFromGitHub(url, options) {
   }
 }
 
-async function loadSurveyData() {
-  try {
-    var file = await fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE);
-    var content = atob(file.content);
-    return JSON.parse(content);
-  } catch(e) {
-    // File doesn't exist yet, return empty structure
-    return { submissions: [], nextId: 1 };
-  }
-}
-
-async function saveSurveyData(data) {
-  var existing = await fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE);
-  var payload = {
-    message: 'Update survey data',
-    content: btoa(JSON.stringify(data)),
-    branch: BRANCH
-  };
-  if (existing.sha) {
-    payload.sha = existing.sha;
-  }
-  return await fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE, {
-    method: 'PUT',
-    body: JSON.stringify(payload)
-  });
-}
-
-// ========== SUBMIT FORM ==========
+// ==================== SUBMIT FORM ====================
 async function submitForm() {
   var salesperson = document.getElementById('salesperson').value.trim();
   var region = document.getElementById('region').value;
@@ -358,30 +332,41 @@ async function submitForm() {
   btn.textContent = '⏳ Submitting...';
 
   try {
-    var data = await loadSurveyData();
-    var submissionId = data.nextId++;
+    // Create a GitHub Issue for each submission
+    var issueTitle = 'Survey: ' + salesperson + ' - ' + region;
+    var labels = [LABEL_PREFIX + region, LABEL_PREFIX + salesperson];
     
-    var submission = {
-      id: submissionId,
-      salesperson: salesperson,
-      region: region,
-      district: district,
-      submitted_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      vehicles: vehicles
-    };
+    var body = '## Basic Info\n';
+    body += '- **Name**: ' + salesperson + '\n';
+    body += '- **Region**: ' + region + '\n';
+    body += '- **District**: ' + (district || 'N/A') + '\n\n';
+    body += '## Vehicle Models\n';
     
-    data.submissions.push(submission);
-    await saveSurveyData(data);
+    for (var j = 0; j < vehicles.length; j++) {
+      var v = vehicles[j];
+      body += '### Model ' + (j+1) + '\n';
+      body += '- **Range**: ' + (v.range_km || 'N/A') + ' km\n';
+      body += '- **Charging Time**: ' + (v.charging_time_h || 'N/A') + ' hours\n';
+      body += '- **Weight**: ' + (v.weight_kg || 'N/A') + ' kg\n';
+      body += '- **Price**: GHS ' + (v.price_ghs || 'N/A') + '\n';
+      if (v.notes) body += '- **Notes**: ' + v.notes + '\n';
+      if (v.photo) body += '- **Photo URL**: ' + v.photo + '\n';
+      body += '\n';
+    }
     
-    toast('✅ Submitted successfully! ' + vehicles.length + ' model(s) recorded.');
-    var sp = data.salesperson;
+    var issue = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues', {
+      method: 'POST',
+      body: JSON.stringify({ title: issueTitle, body: body, labels: labels })
+    });
+    
+    toast('✅ Submitted successfully! Issue #' + issue.number + ' created.');
+    
+    // Reset form
     document.getElementById('region').value = '';
     document.getElementById('district').value = '';
     document.getElementById('vehicleCardsContainer').innerHTML = '';
     vehicleCounter = 0;
     addVehicleCard();
-    document.getElementById('salesperson').value = sp;
   } catch(e) {
     toast('❌ Submission failed: ' + e.message, 'error');
   } finally {
@@ -390,28 +375,69 @@ async function submitForm() {
   }
 }
 
-// ========== LOAD RECORDS ==========
-function loadRecords() {
+// ==================== LOAD RECORDS ====================
+async function loadRecords() {
   var search = document.getElementById('recordSearch').value.trim();
   
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    var records = data.submissions || [];
+  try {
+    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all&labels=' + LABEL_PREFIX);
+    
+    var submissions = [];
+    issues.forEach(function(issue) {
+      // Parse the issue body to extract data
+      var match = issue.body.match(/- \*\*Name\*\*: (.+)/);
+      var name = match ? match[1] : 'Unknown';
+      
+      var match2 = issue.body.match(/- \*\*Region\*\*: (.+)/);
+      var region = match2 ? match2[1] : '';
+      
+      var match3 = issue.body.match(/- \*\*District\*\*: (.+)/);
+      var district = match3 ? match3[1] : '';
+      
+      // Extract vehicle models
+      var vehicles = [];
+      var modelMatches = issue.body.match(/### Model \d+\n([\s\S]*?)(?=### Model|\Z)/g);
+      if (modelMatches) {
+        modelMatches.forEach(function(modelBlock) {
+          var rangeMatch = modelBlock.match(/- \*\*Range\*\*: (.+)/);
+          var chargeMatch = modelBlock.match(/- \*\*Charging Time\*\*: (.+)/);
+          var weightMatch = modelBlock.match(/- \*\*Weight\*\*: (.+)/);
+          var priceMatch = modelBlock.match(/- \*\*Price\*\*: GHS (.+)/);
+          var notesMatch = modelBlock.match(/- \*\*Notes\*\*: (.+)/);
+          
+          vehicles.push({
+            range_km: rangeMatch ? rangeMatch[1] : '',
+            charging_time_h: chargeMatch ? chargeMatch[1] : '',
+            weight_kg: weightMatch ? weightMatch[1] : '',
+            price_ghs: priceMatch ? priceMatch[1] : '',
+            notes: notesMatch ? notesMatch[1] : '',
+            issue_url: issue.html_url
+          });
+        });
+      }
+      
+      submissions.push({
+        id: issue.number,
+        salesperson: name,
+        region: region,
+        district: district,
+        submitted_at: issue.created_at,
+        vehicles: vehicles,
+        issue_url: issue.html_url
+      });
+    });
     
     if (search) {
-      records = records.filter(function(r) {
-        return r.salesperson.toLowerCase().indexOf(search.toLowerCase()) > -1 ||
-               (r.district && r.district.toLowerCase().indexOf(search.toLowerCase()) > -1);
+      submissions = submissions.filter(function(s) {
+        return s.salesperson.toLowerCase().indexOf(search.toLowerCase()) > -1 ||
+               (s.district && s.district.toLowerCase().indexOf(search.toLowerCase()) > -1);
       });
     }
     
-    renderRecords(records);
-  })
-  .catch(function() {
+    renderRecords(submissions);
+  } catch(e) {
     document.getElementById('recordsList').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Failed to load data. Please check your network connection.</p></div>';
-  });
+  }
 }
 
 function renderRecords(records) {
@@ -424,7 +450,7 @@ function renderRecords(records) {
   records.forEach(function(r) {
     html += '<div class="card" style="margin-bottom:16px">' +
       '<h3>' + esc(r.salesperson) + ' — ' + esc(r.region) + '</h3>' +
-      '<p><small>Submitted: ' + new Date(r.submitted_at).toLocaleDateString() + ' | Models: ' + (r.vehicles?r.vehicles.length:0) + '</small></p>' +
+      '<p><small>Issue #' + r.id + ' | Submitted: ' + new Date(r.submitted_at).toLocaleDateString() + ' | <a href="' + r.issue_url + '" target="_blank">View on GitHub</a></small></p>' +
       '<ul style="margin-top:8px;padding-left:20px">';
     if (r.vehicles) {
       r.vehicles.forEach(function(v) {
@@ -441,7 +467,7 @@ function debounceRenderRecords() {
   recordDebounceTimer = setTimeout(loadRecords, 300);
 }
 
-// ========== ADMIN LOGIN ==========
+// ==================== ADMIN LOGIN ====================
 function adminLogin() {
   var pwd = document.getElementById('adminPwd').value;
   if (pwd === ADMIN_PASSWORD) {
@@ -455,38 +481,44 @@ function adminLogin() {
   }
 }
 
-// ========== LOAD ADMIN DATA ==========
-function loadAdminData() {
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    var submissions = data.submissions || [];
+// ==================== LOAD ADMIN DATA ====================
+async function loadAdminData() {
+  try {
+    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all&labels=' + LABEL_PREFIX);
     
-    // Calculate stats
-    var total = submissions.length;
+    var total = issues.length;
     var totalVehicles = 0;
     var prices = [];
     var regions = {};
     var salespersons = {};
     
-    submissions.forEach(function(s) {
-      var count = s.vehicles ? s.vehicles.length : 0;
-      totalVehicles += count;
+    issues.forEach(function(issue) {
+      var match = issue.body.match(/- \*\*Name\*\*: (.+)/);
+      var name = match ? match[1] : 'Unknown';
       
-      if (!regions[s.region]) regions[s.region] = { cnt: 0, prices: [] };
-      regions[s.region].cnt++;
+      var match2 = issue.body.match(/- \*\*Region\*\*: (.+)/);
+      var region = match2 ? match2[1] : '';
       
-      if (!salespersons[s.salesperson]) salespersons[s.salesperson] = { cnt: 0, prices: [] };
-      salespersons[s.salesperson].cnt++;
+      var modelMatches = issue.body.match(/### Model \d+\n([\s\S]*?)(?=### Model|\Z)/g);
+      var vehicleCount = modelMatches ? modelMatches.length : 0;
+      totalVehicles += vehicleCount;
       
-      if (s.vehicles) {
-        s.vehicles.forEach(function(v) {
-          var price = parseFloat(v.price_ghs);
-          if (!isNaN(price)) {
-            prices.push(price);
-            regions[s.region].prices.push(price);
-            salespersons[s.salesperson].prices.push(price);
+      if (!regions[region]) regions[region] = { cnt: 0, prices: [] };
+      regions[region].cnt++;
+      
+      if (!salespersons[name]) salespersons[name] = { cnt: 0, prices: [] };
+      salespersons[name].cnt += vehicleCount;
+      
+      if (modelMatches) {
+        modelMatches.forEach(function(modelBlock) {
+          var priceMatch = modelBlock.match(/- \*\*Price\*\*: GHS (.+)/);
+          if (priceMatch) {
+            var price = parseFloat(priceMatch[1]);
+            if (!isNaN(price)) {
+              prices.push(price);
+              regions[region].prices.push(price);
+              salespersons[name].prices.push(price);
+            }
           }
         });
       }
@@ -539,25 +571,75 @@ function loadAdminData() {
     });
     
     loadAdminRecords();
-  });
+  } catch(e) {
+    console.error('Error loading admin data:', e);
+  }
 }
 
-// ========== LOAD ADMIN RECORDS ==========
-function loadAdminRecords() {
+// ==================== LOAD ADMIN RECORDS ====================
+async function loadAdminRecords() {
   var region = document.getElementById('adminFilterRegion').value;
   
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    var submissions = data.submissions || [];
+  try {
+    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all&labels=' + LABEL_PREFIX);
     
-    if (region) {
-      submissions = submissions.filter(function(s) { return s.region === region; });
+    var submissions = [];
+    issues.forEach(function(issue) {
+      var match = issue.body.match(/- \*\*Name\*\*: (.+)/);
+      var name = match ? match[1] : 'Unknown';
+      
+      var match2 = issue.body.match(/- \*\*Region\*\*: (.+)/);
+      var reg = match2 ? match2[1] : '';
+      
+      var match3 = issue.body.match(/- \*\*District\*\*: (.+)/);
+      var district = match3 ? match3[1] : '';
+      
+      var vehicles = [];
+      var modelMatches = issue.body.match(/### Model \d+\n([\s\S]*?)(?=### Model|\Z)/g);
+      if (modelMatches) {
+        modelMatches.forEach(function(modelBlock) {
+          var rangeMatch = modelBlock.match(/- \*\*Range\*\*: (.+)/);
+          var chargeMatch = modelBlock.match(/- \*\*Charging Time\*\*: (.+)/);
+          var weightMatch = modelBlock.match(/- \*\*Weight\*\*: (.+)/);
+          var priceMatch = modelBlock.match(/- \*\*Price\*\*: GHS (.+)/);
+          var notesMatch = modelBlock.match(/- \*\*Notes\*\*: (.+)/);
+          
+          vehicles.push({
+            range_km: rangeMatch ? rangeMatch[1] : '',
+            charging_time_h: chargeMatch ? chargeMatch[1] : '',
+            weight_kg: weightMatch ? weightMatch[1] : '',
+            price_ghs: priceMatch ? priceMatch[1] : '',
+            notes: notesMatch ? notesMatch[1] : '',
+            issue_url: issue.html_url
+          });
+        });
+      }
+      
+      if (region && reg !== region) return;
+      
+      submissions.push({
+        id: issue.number,
+        salesperson: name,
+        region: reg,
+        district: district,
+        submitted_at: issue.created_at,
+        vehicles: vehicles,
+        issue_url: issue.html_url
+      });
+    });
+    
+    var search = document.getElementById('recordSearch').value.trim();
+    if (search) {
+      submissions = submissions.filter(function(s) {
+        return s.salesperson.toLowerCase().indexOf(search.toLowerCase()) > -1 ||
+               (s.district && s.district.toLowerCase().indexOf(search.toLowerCase()) > -1);
+      });
     }
     
     renderAdminRecords(submissions);
-  });
+  } catch(e) {
+    console.error('Error loading admin records:', e);
+  }
 }
 
 function renderAdminRecords(submissions) {
@@ -570,7 +652,7 @@ function renderAdminRecords(submissions) {
   submissions.forEach(function(s) {
     html += '<div class="card" style="margin-bottom:16px">' +
       '<h3>' + esc(s.salesperson) + ' — ' + esc(s.region) + '</h3>' +
-      '<p><small>ID: ' + s.id + ' | Submitted: ' + new Date(s.submitted_at).toLocaleString() + '</small></p>' +
+      '<p><small>Issue #' + s.id + ' | Submitted: ' + new Date(s.submitted_at).toLocaleString() + ' | <a href="' + s.issue_url + '" target="_blank">View on GitHub</a></small></p>' +
       '<ul style="margin-top:8px;padding-left:20px">';
     if (s.vehicles) {
       s.vehicles.forEach(function(v) {
@@ -579,162 +661,13 @@ function renderAdminRecords(submissions) {
     }
     html += '</ul>' +
       '<div style="margin-top:12px;display:flex;gap:8px">' +
-        '<button class="btn bsm bs" onclick="openEditModal(' + s.id + ')">✏️ Edit</button>' +
-        '<button class="btn bsm bs" onclick="openDeleteModal(' + s.id + ')">🗑️ Delete</button>' +
+        '<a href="' + s.issue_url + '" target="_blank" class="btn bsm bs">View on GitHub</a>' +
       '</div></div>';
   });
   document.getElementById('recordsList').innerHTML = html;
 }
 
-// ========== EDIT ==========
-function openEditModal(id) {
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    var submission = data.submissions.find(function(s) { return s.id === id; });
-    
-    if (!submission) return toast('Submission not found', 'error');
-    
-    document.getElementById('editId').value = submission.id;
-    document.getElementById('editSalesperson').value = submission.salesperson;
-    document.getElementById('editDistrict').value = submission.district || '';
-    
-    var regionSel = document.getElementById('editRegion');
-    regionSel.innerHTML = '';
-    var regions = ['Greater Accra','Ashanti','Western','Central','Eastern','Volta','Northern','Upper East','Upper West','Bono','Bono East','Ahafo','Savannah','North East'];
-    regions.forEach(function(r) {
-      regionSel.innerHTML += '<option value="' + r + '"' + (r === submission.region ? ' selected' : '') + '>' + r + '</option>';
-    });
-    
-    var container = document.getElementById('editVehiclesContainer');
-    container.innerHTML = '';
-    var vehicles = submission.vehicles || [];
-    vehicles.forEach(function(v) {
-      addEditVehicleCard(v);
-    });
-    
-    document.getElementById('editModal').classList.add('show');
-  });
-}
-
-function saveEdit() {
-  var id = parseInt(document.getElementById('editId').value);
-  var dataObj = {
-    salesperson: document.getElementById('editSalesperson').value,
-    region: document.getElementById('editRegion').value,
-    district: document.getElementById('editDistrict').value,
-    vehicles: collectEditVehicleData()
-  };
-  
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    
-    var submission = data.submissions.find(function(s) { return s.id === id; });
-    if (submission) {
-      submission.salesperson = dataObj.salesperson;
-      submission.region = dataObj.region;
-      submission.district = dataObj.district;
-      submission.vehicles = dataObj.vehicles;
-      submission.updated_at = new Date().toISOString();
-    }
-    
-    return saveSurveyData(data);
-  })
-  .then(function() { toast('✅ Updated successfully'); closeEditModal(); loadAdminData(); })
-  .catch(function(e) { toast('❌ Update failed: ' + e.message, 'error'); });
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').classList.remove('show');
-}
-
-// ========== DELETE ==========
-function openDeleteModal(id) {
-  deleteTargetId = id;
-  document.getElementById('deleteModal').classList.add('show');
-}
-
-function closeDeleteModal() {
-  document.getElementById('deleteModal').classList.remove('show');
-}
-
-document.getElementById('confirmDeleteBtn').onclick = function() {
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    
-    data.submissions = data.submissions.filter(function(s) { return s.id !== deleteTargetId; });
-    
-    return saveSurveyData(data);
-  })
-  .then(function() { toast('✅ Deleted successfully'); closeDeleteModal(); loadAdminData(); })
-  .catch(function(e) { toast('❌ Delete failed: ' + e.message, 'error'); });
-};
-
-// ========== EXPORT ==========
-function exportJSON() {
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'MOOVED_EBike_Survey_' + new Date().toISOString().slice(0,10) + '.json';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    toast('📥 JSON exported');
-  });
-}
-
-function exportCSV() {
-  fetchFromGitHub('/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_FILE)
-  .then(function(file) {
-    var content = atob(file.content);
-    var data = JSON.parse(content);
-    var submissions = data.submissions || [];
-    
-    var headers = ['ID','Name','Region','District','Range(km)','Price(GHS)','Notes','Submitted'];
-    var csvLines = [headers.join(',')];
-    
-    submissions.forEach(function(s) {
-      if (s.vehicles) {
-        s.vehicles.forEach(function(v) {
-          csvLines.push([
-            s.id,
-            '"' + String(s.salesperson).replace(/"/g, '""') + '"',
-            '"' + String(s.region).replace(/"/g, '""') + '"',
-            '"' + String(s.district||'').replace(/"/g, '""') + '"',
-            v.range_km || '',
-            v.price_ghs || '',
-            '"' + String(v.notes||'').replace(/"/g, '""') + '"',
-            '"' + String(s.submitted_at).replace(/"/g, '""') + '"'
-          ].join(','));
-        });
-      }
-    });
-    
-    var blob = new Blob(['\ufeff' + csvLines.join('\n')], {type: 'text/csv;charset=utf-8'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'MOOVED_EBike_Survey_' + new Date().toISOString().slice(0,10) + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    toast('📥 CSV exported');
-  });
-}
-
-// ========== INIT ==========
+// ==================== INIT ====================
 addVehicleCard();
 </script>
 </body>
