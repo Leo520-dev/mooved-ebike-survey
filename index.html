@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MOOVED Ghana E-Bike Market Survey</title>
 <style>
-:root{--bg:#17191F;--card:#1E2028;--text:#E0DCD6;--muted:#8B8780;--accent:#E8A278;--accent2:#B88FC8;--border:#2A2D37;--success:#6BCB77;--danger:#EF476F;--warn:#FFD166}
+:root{--bg:#ffffff;--card:#f8f9fa;--text:#212529;--muted:#6c757d;--accent:#e8a278;--accent2:#b88fc8;--border:#dee2e6;--success:#6bcB77;--danger:#ef476f;--warn:#ffd166}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#212529;line-height:1.6;min-height:100vh}
 .c{max-width:800px;margin:0 auto;padding:20px}
 header{text-align:center;padding:40px 20px 30px;border-bottom:1px solid var(--border);margin-bottom:30px}
 header h1{font-size:1.8em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
@@ -16,23 +16,23 @@ header p{color:var(--muted)}
 .tab-btn{padding:12px 24px;background:none;border:none;color:var(--muted);font-size:1em;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.3s}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tc{display:none}.tc.active{display:block}
-.card{background:var(--card);border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.3)}
-.card h2{color:var(--accent2);margin-bottom:16px;font-size:1.2em}
+.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.card h2{color:#333;margin-bottom:16px;font-size:1.2em}
 .pg{margin-bottom:20px}
 .pg label{display:block;margin-bottom:6px;font-weight:500}
 .pg label .r{color:var(--danger)}
-.pg input[type=text],.pg input[type=email],.pg input[type=tel],.pg select,.pg textarea{width:100%;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:1em}
+.pg input[type=text],.pg input[type=email],.pg input[type=tel],.pg select,.pg textarea{width:100%;padding:12px 16px;background:#fff;border:1px solid var(--border);border-radius:8px;color:#212529;font-size:1em}
 .pg input:focus,.pg select:focus,.pg textarea:focus{outline:none;border-color:var(--accent)}
 .pg textarea{resize:vertical;min-height:80px}
 .btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:1em;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
 .bp{background:linear-gradient(135deg,var(--accent),#d4845a);color:#fff}.bp:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,162,120,.3)}
-.bs{background:var(--border);color:var(--text)}.bs:hover{background:#3a3d47}
+.bs{background:var(--border);color:var(--text)}.bs:hover{background:#ced4da}
 .bsm{padding:8px 16px;font-size:.9em}
-.vc{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:relative}
+.vc{background:#f8f9fa;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:relative}
 .vc .remove{position:absolute;top:12px;right:12px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1.2em;line-height:1;display:flex;align-items:center;justify-content:center}
 .vc .remove:hover{opacity:.8}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:var(--card);border-radius:12px;padding:20px;text-align:center;border:1px solid var(--border)}
+.stat-card{background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .stat-card .num{font-size:2em;font-weight:700;color:var(--accent);margin-bottom:4px}
 .stat-card .label{color:var(--muted);font-size:.9em}
 table{width:100%;border-collapse:collapse;margin-top:16px}
@@ -46,9 +46,9 @@ tr:hover{background:rgba(232,162,120,.05)}
 .empty-state .icon{font-size:3em;margin-bottom:12px}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;margin-bottom:6px;font-weight:500}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:1em}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center}
-.modal{background:var(--card);border-radius:16px;padding:32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid var(--border)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;color:#212529;font-size:1em}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:16px;padding:32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid var(--border)}
 .modal h3{color:var(--accent);margin-bottom:20px}
 .hidden{display:none!important}
 @media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr}.c{padding:12px}.card{padding:16px}}
@@ -65,7 +65,7 @@ tr:hover{background:rgba(232,162,120,.05)}
 <div class="card" style="margin-bottom:20px">
 <h2>🔑 GitHub Token Required</h2>
 <p style="color:var(--muted);margin-bottom:16px">Enter your GitHub Personal Access Token to enable data storage:</p>
-<input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+<input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="width:100%;padding:12px;background:#fff;border:1px solid var(--border);border-radius:8px;color:#212529">
 <button class="btn bp" onclick="saveGitHubToken()" style="margin-top:12px">Save Token</button>
 </div>
 
@@ -146,10 +146,10 @@ tr:hover{background:rgba(232,162,120,.05)}
 <div class="card">
 <h2>All Records</h2>
 <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-<select id="adminFilterRegion" onchange="loadAdminRecords()" style="flex:1;min-width:200px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+<select id="adminFilterRegion" onchange="loadAdminRecords()" style="flex:1;min-width:200px;padding:10px;background:#fff;border:1px solid var(--border);border-radius:8px;color:#212529">
 <option value="">All Regions</option>
 </select>
-<input type="text" id="recordSearch" placeholder="Search..." oninput="debounceRenderRecords()" style="flex:1;min-width:200px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+<input type="text" id="recordSearch" placeholder="Search..." oninput="debounceRenderRecords()" style="flex:1;min-width:200px;padding:10px;background:#fff;border:1px solid var(--border);border-radius:8px;color:#212529">
 </div>
 <div id="recordsList"></div>
 </div>
@@ -385,9 +385,12 @@ async function submitForm() {
 async function loadRecords() {
   var search = document.getElementById('recordSearch').value.trim();
   try {
-    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all&labels=' + LABEL_PREFIX);
+    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all');
     var submissions = [];
     issues.forEach(function(issue) {
+      // Only process survey issues (check if body contains "## Basic Info")
+      if (!issue.body.includes('## Basic Info')) return;
+      
       var m = issue.body.match(/- \*\*Name\*\*: (.+)/);
       var name = m ? m[1] : 'Unknown';
       var m2 = issue.body.match(/- \*\*Region\*\*: (.+)/);
@@ -445,9 +448,13 @@ function adminLogin() {
 // ==================== LOAD ADMIN DATA ====================
 async function loadAdminData() {
   try {
-    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all&labels=' + LABEL_PREFIX);
-    var total = issues.length, totalVehicles = 0, prices = [], regions = {}, salespersons = {};
+    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all');
+    var total = 0, totalVehicles = 0, prices = [], regions = {}, salespersons = {};
     issues.forEach(function(issue) {
+      // Only process survey issues
+      if (!issue.body.includes('## Basic Info')) return;
+      
+      total++;
       var m = issue.body.match(/- \*\*Name\*\*: (.+)/);
       var name = m ? m[1] : 'Unknown';
       var m2 = issue.body.match(/- \*\*Region\*\*: (.+)/);
@@ -497,9 +504,12 @@ async function loadAdminData() {
 async function loadAdminRecords() {
   var region = document.getElementById('adminFilterRegion').value;
   try {
-    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all&labels=' + LABEL_PREFIX);
+    var issues = await githubRequest('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/issues?state=all');
     var submissions = [];
     issues.forEach(function(issue) {
+      // Only process survey issues
+      if (!issue.body.includes('## Basic Info')) return;
+      
       var m = issue.body.match(/- \*\*Name\*\*: (.+)/);
       var name = m ? m[1] : 'Unknown';
       var m2 = issue.body.match(/- \*\*Region\*\*: (.+)/);
