@@ -316,17 +316,17 @@ function collectEditVehicleData() {
 // ==================== GITHUB API HELPERS ====================
 async function githubRequest(url, options) {
   options = options || {};
-  options.headers = options.headers || {};
-  options.headers['Accept'] = 'application/vnd.github.v3+json';
-  options.headers['User-Agent'] = 'MOOVED-Survey-App';
+  var headers = {};
+  headers['Accept'] = 'application/vnd.github.v3+json';
+  headers['User-Agent'] = 'MOOVED-Survey-App';
   if (GITHUB_TOKEN) {
-    options.headers['Authorization'] = 'Bearer ' + GITHUB_TOKEN;
+    headers['Authorization'] = 'Bearer ' + GITHUB_TOKEN;
   }
   if (options.body && typeof options.body === 'string') {
-    options.headers['Content-Type'] = 'application/json';
+    headers['Content-Type'] = 'application/json';
   }
   try {
-    var response = await fetch(url, options);
+    var response = await fetch(url, Object.assign({}, options, { headers: headers }));
     if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
     return await response.json();
   } catch(e) { console.error('GitHub API error:', e); throw e; }
