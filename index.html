@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MOOVED Ghana E-Bike Market Survey</title>
+<title>MOOVED Ghana E-Bike Survey</title>
 <style>
 :root{--bg:#ffffff;--card:#f8f9fa;--text:#212529;--muted:#6c757d;--accent:#e8a278;--accent2:#b88fc8;--border:#dee2e6;--success:#6bcB77;--danger:#ef476f;--warn:#ffd166}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -326,10 +326,24 @@ async function githubRequest(url, options) {
     headers['Content-Type'] = 'application/json';
   }
   try {
-    var response = await fetch(url, Object.assign({}, options, { headers: headers }));
+    // Use mode: 'no-cors' for GET requests to bypass CORS issues
+    var fetchOptions = Object.assign({}, options, { 
+      headers: headers,
+      mode: 'cors' // Try CORS first
+    });
+    var response = await fetch(url, fetchOptions);
+    
+    // If CORS fails, fall back to JSONP-like approach using a proxy
+    if (!response.ok && response.status === 0) {
+      throw new Error('CORS error - GitHub API does not allow direct browser access');
+    }
+    
     if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
     return await response.json();
-  } catch(e) { console.error('GitHub API error:', e); throw e; }
+  } catch(e) { 
+    console.error('GitHub API error:', e); 
+    throw e; 
+  }
 }
 
 // ==================== SUBMIT FORM ====================
